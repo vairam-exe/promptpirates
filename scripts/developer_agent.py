@@ -4,7 +4,7 @@ import re
 from utils import get_entire_codebase
 
 genai.configure(api_key=os.environ["GEMINI_API_KEY"])
-model = genai.GenerativeModel("gemini-1.5-pro-latest")
+model = genai.GenerativeModel('gemini-2.5-flash')
 
 with open("docs/SDS.md", "r") as f:
     sds_content = f.read()
