@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - 'requirements/**'
+  workflow_dispatch:
 
 jobs:
   build-and-implement:
