@@ -1,47 +1,61 @@
 import streamlit as st
+import db_manager
+import auth_service
 
-# --- 1. USER AUTHENTICATION LOGIC (SIMPLE IN-MEMORY) ---
-# Initialize session state for mock database and login status if they don't exist
-if 'user_db' not in st.session_state:
-    # Pre-populate with one test user
-    st.session_state['user_db'] = {
-        "admin": {"password": "password123", "email": "admin@example.com"}
-    }
+# --- Initialize Database ---
+# Ensure the database and tables are set up on application start.
+# This will also create the default admin user if the table is empty.
+db_manager.init_db()
+
+# --- 1. USER AUTHENTICATION LOGIC ---
+# Initialize session state for login status if they don't exist
 if 'logged_in' not in st.session_state:
     st.session_state['logged_in'] = False
 if 'current_user' not in st.session_state:
     st.session_state['current_user'] = None
+if 'current_user_email' not in st.session_state:
+    st.session_state['current_user_email'] = None
+if 'current_user_role' not in st.session_state:
+    st.session_state['current_user_role'] = None
 
 def login_user(username, password):
-    db = st.session_state['user_db']
-    # Check if user exists and password matches
-    if username in db and db[username]['password'] == password:
+    """
+    Authenticates a user using the auth_service and updates session state.
+    """
+    user_data = auth_service.authenticate_user(username, password)
+    if user_data:
         st.session_state['logged_in'] = True
-        st.session_state['current_user'] = username
-        st.success("Logged in successfully!")
-        st.rerun() # Refresh the app to show the logged-in view
+        st.session_state['current_user'] = user_data['username']
+        st.session_state['current_user_email'] = user_data['email']
+        st.session_state['current_user_role'] = user_data['role']
+        st.success(f"Logged in successfully as {user_data['username']} ({user_data['role']})!")
+        st.rerun()  # Refresh the app to show the logged-in view
     else:
         st.error("Incorrect username or password")
 
 def signup_user(username, email, password):
-    db = st.session_state['user_db']
-    if username in db:
-        st.warning("Username already exists!")
-    elif not username or not password:
-         st.warning("Username and password are required.")
+    """
+    Registers a new user using the auth_service and displays status.
+    """
+    # For now, new users default to 'user' role
+    success, message = auth_service.register_user(username, email, password, role='user')
+    if success:
+        st.success(message)
     else:
-        # Add new user to the in-memory database
-        db[username] = {"password": password, "email": email}
-        st.session_state['user_db'] = db
-        st.success("Account created! You can now log in.")
+        st.warning(message)
 
 def logout_user():
+    """
+    Logs out the current user by clearing relevant session state variables.
+    """
     st.session_state['logged_in'] = False
     st.session_state['current_user'] = None
+    st.session_state['current_user_email'] = None
+    st.session_state['current_user_role'] = None
     st.rerun()
 
 # --- 2. MAIN APP INTERFACE ---
-st.title("Simple Login App")
+st.title("Streamlit Persistent Login App")
 
 # If the user is NOT logged in, show the Tabs
 if not st.session_state['logged_in']:
@@ -69,9 +83,12 @@ if not st.session_state['logged_in']:
 # If the user IS logged in, show the main app content
 else:
     st.sidebar.header(f"Welcome, {st.session_state['current_user']}!")
+    st.sidebar.info(f"Role: {st.session_state.get('current_user_role', 'N/A')}")
     if st.sidebar.button("Logout"):
         logout_user()
 
     st.markdown("## Main Application Area")
-    st.write(f"You are securely logged in. Your email is: {st.session_state['user_db'][st.session_state['current_user']]['email']}")
+    st.write(f"You are securely logged in as **{st.session_state['current_user']}**.")
+    st.write(f"Your email is: **{st.session_state.get('current_user_email', 'Not available')}**")
+    st.write(f"Your role is: **{st.session_state.get('current_user_role', 'Not available')}**")
     st.balloons()
