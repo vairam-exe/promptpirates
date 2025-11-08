@@ -3,7 +3,7 @@ import os
 from utils import get_entire_codebase, get_latest_brs
 
 genai.configure(api_key=os.environ['GEMINI_API_KEY'])
-model = genai.GenerativeModel('gemini-1.5-pro-latest')
+model = genai.GenerativeModel('gemini-2.5-flash')
 
 brs_content = get_latest_brs()
 codebase = get_entire_codebase('src') # Assumes your code is in a 'src' folder
