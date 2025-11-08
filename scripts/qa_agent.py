@@ -5,7 +5,7 @@ from io import StringIO
 from utils import get_latest_brs
 
 genai.configure(api_key=os.environ['GEMINI_API_KEY'])
-model = genai.GenerativeModel('gemini-1.5-flash-latest') # Flash is enough for this
+model = genai.GenerativeModel('gemini-2.5-flash') # Flash is enough for this
 
 brs_content = get_latest_brs()
 with open('docs/SDS.md', 'r') as f:
